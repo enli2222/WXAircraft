@@ -7,7 +7,7 @@
 //
 
 #import "GameViewController.h"
-#import "GameScene.h"
+#import "StartScene.h"
 
 @implementation GameViewController
 
@@ -18,7 +18,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    GameScene *scene = [[GameScene alloc] initWithSize:[UIScreen mainScreen].bounds.size];
+    StartScene *scene = [[StartScene alloc] initWithSize:[UIScreen mainScreen].bounds.size];
     scene.scaleMode = SKSceneScaleModeAspectFill;
     
     SKView *skView = (SKView *)self.view;

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D4201012183086E000D6F85 /* StartScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D4201002183086E000D6F85 /* StartScene.m */; };
 		8DD534E12179EC9B00D26EFF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DD534E02179EC9B00D26EFF /* AppDelegate.m */; };
 		8DD534E82179EC9B00D26EFF /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DD534E72179EC9B00D26EFF /* GameScene.m */; };
 		8DD534EB2179EC9B00D26EFF /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8DD534EA2179EC9B00D26EFF /* GameViewController.m */; };
@@ -17,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8D4200FF2183086E000D6F85 /* StartScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StartScene.h; sourceTree = "<group>"; };
+		8D4201002183086E000D6F85 /* StartScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StartScene.m; sourceTree = "<group>"; };
 		8DD534DC2179EC9B00D26EFF /* WXAircraft.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WXAircraft.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD534DF2179EC9B00D26EFF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		8DD534E02179EC9B00D26EFF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -70,6 +73,8 @@
 				8DD534E72179EC9B00D26EFF /* GameScene.m */,
 				8DD534E92179EC9B00D26EFF /* GameViewController.h */,
 				8DD534EA2179EC9B00D26EFF /* GameViewController.m */,
+				8D4200FF2183086E000D6F85 /* StartScene.h */,
+				8D4201002183086E000D6F85 /* StartScene.m */,
 				8DD534EF2179EC9D00D26EFF /* Assets.xcassets */,
 				8DD534F12179EC9D00D26EFF /* LaunchScreen.storyboard */,
 				8DD534F42179EC9D00D26EFF /* Info.plist */,
@@ -148,6 +153,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD534E82179EC9B00D26EFF /* GameScene.m in Sources */,
+				8D4201012183086E000D6F85 /* StartScene.m in Sources */,
 				8DD53501217B28E900D26EFF /* ELSpiritNode.m in Sources */,
 				8DD534EB2179EC9B00D26EFF /* GameViewController.m in Sources */,
 				8DD534F62179EC9D00D26EFF /* main.m in Sources */,

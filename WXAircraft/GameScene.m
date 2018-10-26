@@ -9,6 +9,7 @@
 #define Bullet_MAX 50
 
 #import "GameScene.h"
+#import "StartScene.h"
 #import "ELSpiritNode.h"
 
 @implementation GameScene {
@@ -179,10 +180,17 @@
     SKNode *nodeB = contact.bodyB.node;
     [nodeB removeAllActions];
     [nodeB removeFromParent];
+    
+    [self endGame];
 }
 
 - (void)didEndContact:(SKPhysicsContact *)contact{
     NSLog(@"didEndContact");
+}
+
+-(void)endGame{
+    StartScene *ss = [[StartScene alloc]initWithSize:self.size];
+    [self.view presentScene:ss transition:[SKTransition revealWithDirection:SKTransitionDirectionLeft duration:1.0]];
 }
 
 @end
