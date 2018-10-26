@@ -25,7 +25,7 @@
     
     // Present the scene
     [skView presentScene:scene];
-    
+    skView.ignoresSiblingOrder = YES;
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
 }

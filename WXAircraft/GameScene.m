@@ -6,20 +6,31 @@
 //  Copyright © 2018年 enli. All rights reserved.
 //
 
+#define Bullet_MAX 50
+
 #import "GameScene.h"
 #import "ELSpiritNode.h"
 
 @implementation GameScene {
     BOOL _isPlane;
     CGPoint _position;
-    CGFloat scale;
+//    CGFloat scale;
+    NSMutableArray *bullets;
+    NSMutableArray *enemys;
+    SKSpriteNode *player;
+    UInt32 bulletCategory,enemyCategory,playerCategory;
 }
 
 - (void)didMoveToView:(SKView *)view {
     _isPlane = NO;
     NSLog(@"scale:%f nativeScale:%f",[UIScreen mainScreen].scale, [UIScreen mainScreen].nativeScale);
-    scale = 2.0;
+//    scale = 1.5;
+    bulletCategory = 0x1 << 0;
+    enemyCategory = 0x1 << 1;
+    playerCategory = 0x1 << 2;
     self.backgroundColor = [UIColor colorWithRed:80.0/255.0 green:192.0/255.0 blue:203.0/255.0 alpha:1.0];
+    self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
+    self.physicsWorld.contactDelegate = self;
 //    SKLabelNode *label = [SKLabelNode labelNodeWithText:@"微信小飞机之山寨版"];
 //    label.color = [UIColor whiteColor];
 //    label.verticalAlignmentMode = SKLabelVerticalAlignmentModeCenter;
@@ -34,16 +45,71 @@
     bgNode.size = self.size;
     [self addChild: bgNode];
     
-    SKSpriteNode *player = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"hero1"]]];
-    player.position = CGPointMake(self.size.width / 2, self.size.height /2);
+    player = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"hero1"]]];
+//    player.size = CGSizeMake(player.size.width / scale, player.size.height /scale);
+    player.position = CGPointMake([UIScreen mainScreen].bounds.size.width / 2,player.size.height);
     player.anchorPoint = CGPointMake(0.5, 0.5);
-    player.size = CGSizeMake(player.size.width / scale, player.size.height /scale);
     player.zPosition = 1;
     player.name = @"plane";
+    player.physicsBody = [SKPhysicsBody bodyWithTexture:player.texture size:player.size];
+    player.physicsBody.allowsRotation = NO;
+    player.physicsBody.categoryBitMask = playerCategory;
+    player.physicsBody.contactTestBitMask = enemyCategory | bulletCategory;
+    player.physicsBody.dynamic = YES;
     [self addChild:player];
+    
+    bullets = [[NSMutableArray alloc]init];
+    enemys = [[NSMutableArray alloc]init];
+    
+    SKAction *actionAddEnemy = [SKAction runBlock:^{
+        [self addEnemy:@"enemy1" speed:4.0];
+    }];
+    SKAction *actionWaitNextEnemy = [SKAction waitForDuration:1.0];
+    [self runAction:[SKAction repeatActionForever:
+     [SKAction sequence:@[actionAddEnemy,actionWaitNextEnemy]]]];
                             
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panAction:)];
     [self.view addGestureRecognizer:pan];
+
+}
+
+-(void)addEnemy:(NSString *)name speed:(CGFloat)speed{
+    SKSpriteNode *enemy = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:name]]];
+//    enemy.size = CGSizeMake(enemy.size.width / scale, enemy.size.height /scale);
+    CGFloat positionX = arc4random_uniform([UIScreen mainScreen].bounds.size.width - enemy.size.width);
+    enemy.position = CGPointMake(positionX, [UIScreen mainScreen].bounds.size.height);
+    enemy.zPosition = 1;
+    enemy.physicsBody = [SKPhysicsBody bodyWithTexture:enemy.texture size:enemy.size];
+    enemy.physicsBody.allowsRotation = NO;
+    enemy.physicsBody.categoryBitMask = enemyCategory;
+    enemy.physicsBody.contactTestBitMask = playerCategory | bulletCategory ;
+    enemy.physicsBody.dynamic = NO;
+    [self addChild:enemy];
+    
+    SKAction *actionMove = [SKAction moveTo:CGPointMake(positionX, enemy.size.height / 2) duration:speed];
+    SKAction *actionMoveDone = [SKAction runBlock:^{
+        [enemy removeFromParent];
+        [self->enemys removeObject:enemy];
+    }];
+    [enemy runAction:[SKAction sequence:@[actionMove,actionMoveDone]]];
+    [enemys addObject:enemy];
+}
+
+-(void)shot{
+    SKSpriteNode *bullet = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"bullet1"]]];
+//    bullet.size = CGSizeMake(bullet.size.width / scale, bullet.size.height /scale);
+    bullet.physicsBody.categoryBitMask = bulletCategory;
+    bullet.physicsBody.contactTestBitMask = enemyCategory ;
+    bullet.position = CGPointMake(player.position.x,player.position.y);
+    bullet.physicsBody.dynamic = NO;
+    bullet.name = @"bullet";
+    [self addChild:bullet];
+    SKAction *actionMove = [SKAction moveTo:CGPointMake(bullet.position.x, [UIScreen mainScreen].bounds.size.height) duration:1.0];
+    SKAction *actionMoveDone = [SKAction runBlock:^{
+        [bullet removeFromParent];
+    }];
+    [bullet runAction:[SKAction sequence:@[actionMove,actionMoveDone]]];
+//    [bullets addObject:bullet];
 }
 
 -(void)panAction:(UIPanGestureRecognizer *)sender{
@@ -62,12 +128,13 @@
 //        default:
 //            break;
 //    }
-//
-    
+
     
     if (_isPlane) {
         _position = [sender locationInView:sender.view];
 //        NSLog(@"%f:%f",_position.x,_position.y);
+        SKSpriteNode *player = (SKSpriteNode *)[self childNodeWithName:@"plane"];
+        player.position = CGPointMake(_position.x, self.size.height-_position.y);
     }
 
 }
@@ -84,21 +151,38 @@
 //    [_label runAction:[SKAction actionNamed:@"Pulse"] withKey:@"fadeInOut"];
 //    for (UITouch *t in touches) {[self touchDownAtPoint:[t locationInNode:self]];}
 }
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
-//    for (UITouch *t in touches) {[self touchMovedToPoint:[t locationInNode:self]];}
-}
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-//    for (UITouch *t in touches) {[self touchUpAtPoint:[t locationInNode:self]];}
-}
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-//    for (UITouch *t in touches) {[self touchUpAtPoint:[t locationInNode:self]];}
-}
+//- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
+////    for (UITouch *t in touches) {[self touchMovedToPoint:[t locationInNode:self]];}
+//}
+//- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+////    for (UITouch *t in touches) {[self touchUpAtPoint:[t locationInNode:self]];}
+//}
+//- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+////    for (UITouch *t in touches) {[self touchUpAtPoint:[t locationInNode:self]];}
+//}
 
 -(void)update:(CFTimeInterval)currentTime {
-    // Called before each frame is rendered
-    SKSpriteNode *player = (SKSpriteNode *)[self childNodeWithName:@"plane"];
-    player.position = CGPointMake(_position.x, self.size.height-_position.y);
-    
+    static int bulletNum = 0;
+    if (bulletNum > 20) {
+//        [self shot];
+        bulletNum = 0;
+    }
+    bulletNum ++;
+}
+
+- (void)didBeginContact:(SKPhysicsContact *)contact{
+//    SKPhysicsBody *bodyA,*bodyB;
+    NSLog(@"didBeginContact");
+    SKNode *nodeA = contact.bodyA.node;
+    [nodeA removeAllActions];
+    [nodeA removeFromParent];
+    SKNode *nodeB = contact.bodyB.node;
+    [nodeB removeAllActions];
+    [nodeB removeFromParent];
+}
+
+- (void)didEndContact:(SKPhysicsContact *)contact{
+    NSLog(@"didEndContact");
 }
 
 @end
