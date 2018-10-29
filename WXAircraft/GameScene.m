@@ -15,17 +15,18 @@
 @implementation GameScene {
     BOOL _isPlane;
     CGPoint _position;
-//    CGFloat scale;
+    CGFloat scale;
     NSMutableArray *bullets;
     NSMutableArray *enemys;
     SKSpriteNode *player;
     UInt32 bulletCategory,enemyCategory,playerCategory;
+    SKAction *enemy1_down;
 }
 
 - (void)didMoveToView:(SKView *)view {
     _isPlane = NO;
-    NSLog(@"scale:%f nativeScale:%f",[UIScreen mainScreen].scale, [UIScreen mainScreen].nativeScale);
-//    scale = 1.5;
+//    NSLog(@"scale:%f nativeScale:%f",[UIScreen mainScreen].scale, [UIScreen mainScreen].nativeScale);
+    scale = 1.5;
     bulletCategory = 0x1 << 0;
     enemyCategory = 0x1 << 1;
     playerCategory = 0x1 << 2;
@@ -47,7 +48,7 @@
     [self addChild: bgNode];
     
     player = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"hero1"]]];
-//    player.size = CGSizeMake(player.size.width / scale, player.size.height /scale);
+    player.size = CGSizeMake(player.size.width / scale, player.size.height /scale);
     player.position = CGPointMake([UIScreen mainScreen].bounds.size.width / 2,player.size.height);
     player.anchorPoint = CGPointMake(0.5, 0.5);
     player.zPosition = 1;
@@ -71,20 +72,21 @@
                             
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(panAction:)];
     [self.view addGestureRecognizer:pan];
+    
+    enemy1_down = [SKAction animateWithTextures:@[[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"enemy1_down1"]],[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"enemy1_down2"]],[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"enemy1_down3"]],[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"enemy1_down4"]]] timePerFrame:0.15];
 
 }
 
 -(void)addEnemy:(NSString *)name speed:(CGFloat)speed{
     SKSpriteNode *enemy = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:name]]];
-//    enemy.size = CGSizeMake(enemy.size.width / scale, enemy.size.height /scale);
+    enemy.size = CGSizeMake(enemy.size.width / scale, enemy.size.height /scale);
     CGFloat positionX = arc4random_uniform([UIScreen mainScreen].bounds.size.width - enemy.size.width);
     enemy.position = CGPointMake(positionX, [UIScreen mainScreen].bounds.size.height);
     enemy.zPosition = 1;
     enemy.physicsBody = [SKPhysicsBody bodyWithTexture:enemy.texture size:enemy.size];
-    enemy.physicsBody.allowsRotation = NO;
     enemy.physicsBody.categoryBitMask = enemyCategory;
     enemy.physicsBody.contactTestBitMask = playerCategory | bulletCategory ;
-    enemy.physicsBody.dynamic = NO;
+    enemy.physicsBody.dynamic = YES;
     [self addChild:enemy];
     
     SKAction *actionMove = [SKAction moveTo:CGPointMake(positionX, enemy.size.height / 2) duration:speed];
@@ -98,11 +100,13 @@
 
 -(void)shot{
     SKSpriteNode *bullet = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImage:[[ELSpiritNode getShareInstance] getByName:@"bullet1"]]];
-//    bullet.size = CGSizeMake(bullet.size.width / scale, bullet.size.height /scale);
+    bullet.size = CGSizeMake(bullet.size.width / scale, bullet.size.height /scale);
+    bullet.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:bullet.size];
     bullet.physicsBody.categoryBitMask = bulletCategory;
     bullet.physicsBody.contactTestBitMask = enemyCategory ;
     bullet.position = CGPointMake(player.position.x,player.position.y);
     bullet.physicsBody.dynamic = NO;
+    bullet.zPosition = 1;
     bullet.name = @"bullet";
     [self addChild:bullet];
     SKAction *actionMove = [SKAction moveTo:CGPointMake(bullet.position.x, [UIScreen mainScreen].bounds.size.height) duration:1.0];
@@ -165,7 +169,7 @@
 -(void)update:(CFTimeInterval)currentTime {
     static int bulletNum = 0;
     if (bulletNum > 20) {
-//        [self shot];
+        [self shot];
         bulletNum = 0;
     }
     bulletNum ++;
@@ -175,13 +179,30 @@
 //    SKPhysicsBody *bodyA,*bodyB;
     NSLog(@"didBeginContact");
     SKNode *nodeA = contact.bodyA.node;
-    [nodeA removeAllActions];
-    [nodeA removeFromParent];
+    if (contact.bodyA.categoryBitMask == enemyCategory) {
+        [nodeA runAction:enemy1_down completion:^{
+            [nodeA removeAllActions];
+            [nodeA removeFromParent];
+        }];
+    }else{
+        [nodeA removeAllActions];
+        [nodeA removeFromParent];
+    }
     SKNode *nodeB = contact.bodyB.node;
-    [nodeB removeAllActions];
-    [nodeB removeFromParent];
+    if (contact.bodyB.categoryBitMask == enemyCategory) {
+        [nodeB runAction:enemy1_down completion:^{
+            [nodeB removeAllActions];
+            [nodeB removeFromParent];
+        }];
+    }else{
+        [nodeB removeAllActions];
+        [nodeB removeFromParent];
+    }
     
-    [self endGame];
+    if (contact.bodyA.categoryBitMask == playerCategory || contact.bodyB.categoryBitMask == playerCategory) {
+        [self endGame];
+        return;
+    }
 }
 
 - (void)didEndContact:(SKPhysicsContact *)contact{
